@@ -1,76 +1,73 @@
-# 🛒 E-Commerce Behavioral Pipeline & Conversion Analysis
-### *An End-to-End Data Science & SQL Project*
+# 📊 E-Commerce Behavioral Pipeline & Conversion Analysis
+### *Full-Stack Product Analytics: Identifying Intent & Recovering Revenue*
 
 ## 📌 Project Overview
-This project bridges the gap between raw web behavior and actionable business strategy. Using a dataset of **2,500+ global e-commerce sessions**, I developed a full-stack analytics pipeline. By applying the **Scientific Method**—forming hypotheses about user intent and testing them through Machine Learning—I identified high-value segments and quantified "leakage" in the conversion funnel.
+This project transforms raw user interaction data into a strategic roadmap for conversion optimization. By integrating **Python-driven behavioral segmentation** with **SQL-based financial attribution**, I mapped the user journey of 2,500+ global sessions to identify high-value behaviors and pinpoint where revenue "leaks" from the funnel.
 
 ---
 
-## 🚀 Phase 1: Behavioral Data Science (Python)
+## 🚀 Phase 1: Behavioral Analytics & Feature Engineering (Python)
 
-**Objective:** Transform raw, noisy session data into "Intelligent Features."
+**Objective:** Cleanse raw session data and engineer "Intelligent Features" that quantify user intent.
 
-### 🔍 Exploratory & Correlation Analysis
-I started by isolating variables to understand what actually drives a sale.
-* **Observation:** Engagement time outweighs raw page counts.
-* **Key Visuals:**
-![User Behavior Correlation](images/user_behavior_correlation.png)
-![Page Views Distribution](images/page_views_distribution_per_session.png)
+* **From Noisy Data to Insights:** The raw dataset contained high-variance metrics like absolute click counts and erratic session durations. I neutralized this noise by creating the **Intent Score (Cart-to-View Ratio)**, which measures the efficiency of a user's path to purchase rather than just their time spent browsing.
+* **Intelligent Features:** * `cart_to_view_ratio`: Distinguishes "Surgical Buyers" from "Window Shoppers."
+    * `session_velocity`: Average time spent per page to identify engagement depth.
 
-### 🧪 The "Science" in the Data
-Coming from a **BSc background**, I approached this as a controlled experiment. I used feature scaling and pair-plotting to validate that "time-on-site" is a stronger predictor of sales than "number of pages viewed."
-![Purchase Drivers Pairplot](images/behav_pairplot_purchase_drivers.png)
+### Visualizing Interaction Patterns
+![Correlation Heatmap](image_9bdb8b.png)
+**Interpreting the Heatmap:**
+* The high correlation (**0.73**) between `purchased` and `order_value_usd` validates the data integrity for revenue analysis.
+* The low correlation between `pages_viewed` and `purchased` (**0.07**) was a key finding—proving that "more browsing" does not necessarily equal "more buying," shifting the focus toward session quality over quantity.
 
-### 🤖 Machine Learning & Segmentation
-* **Random Forest:** Identified that engagement time holds **88.6% importance**.
-* **K-Means Clustering:** Segmented the population into 3 distinct behavioral archetypes.
-![ML Cluster Impact](images/ml_cluster_impact.png)
+![Distribution of Pages](image_9bdbc3.png)
+**Engagement Frequency:** The distribution reveals a peak at 5–6 pages per session. Users exceeding this "saturation point" without adding to cart are flagged as "Stuck" in the UI, representing a friction point rather than high interest.
 
 ---
 
-## 📈 Phase 2: Strategic Infrastructure & BI (SQL)
+## 📈 Phase 2: User Segmentation & Multivariate Analysis
 
-**Objective:** Migrate ML-refined data into a relational environment for financial reporting.
+I utilized **K-Means Clustering** to segment the population into three distinct archetypes based on behavior rather than just demographics.
 
-### 🏗️ ETL & Schema Design
-I migrated the "Golden Record" from Python to a **MySQL relational schema** to ensure data integrity for downstream BI tasks.
-![SQL Table Structure](images/sql_table_structure.png)
+| Segment | Label | % of Traffic | Key Characteristic | Strategic Action |
+| :--- | :--- | :--- | :--- | :--- |
+| **Segment 1** | **The VIPs** | ~15% | High Intent Score, 100% Conversion | Loyalty & Retention |
+| **Segment 0** | **The Potential** | ~51% | Moderate engagement, 5.18% Conversion | Personalization & Nudging |
+| **Segment 2** | **Window Shoppers**| ~34% | Max Time on Site, 0% Conversion | UI/UX Friction Audit |
 
-### 🌪️ Funnel Analytics & Revenue Attribution
-Using **CTEs and Window Functions**, I mapped the transition from *Session -> Add-to-Cart -> Purchase* and calculated exact revenue contributions.
-* **The Conversion Paradox:** High engagement does not always equal high conversion.
-![Engagement vs Conversion](images/engagement_vs_conversion.png)
-![Conversion by Category](images/conversion_by_category.png)
+![Pairplot of Segments](Screenshot%20(784).jpg)
+**Pairplot Interpretation:** This visualization confirms that Segment 1 (blue clusters) occupies the high-intent/high-purchase space with minimal time wastage, while Segment 2 (orange clusters) shows high "Time on Site" but fails to cross the "Added to Cart" threshold, highlighting a major conversion leak.
 
 ---
 
-## 🔍 Key Strategic Insights
+## 🛠️ Phase 3: Strategic SQL Infrastructure & ETL
 
-### 1. The Conversion Leak (The "Aha!" Moment)
-**Segment 2 (Window Shoppers)** represents 34% of total traffic. Despite spending the most time on-site, they have a **0% conversion rate**.
-![Funnel Dropoff](images/funnel_dropoff.png)
-![High Engagement No Conversion](images/high_engagement_no_conversion.png)
+**Objective:** Build a "Golden Record" database to allow stakeholders to query behavioral segments in real-time.
 
-### 2. Global Revenue Performance
-I utilized `RANK()` and `SUM OVER` to identify which regions and devices drive the most value.
-![Revenue by Country and Device](images/revenue_by_country_device.png)
-*(Alternative View: ![Revenue Alt](images/revenue_by_country_device_alt.png))*
+* **ETL Pipeline:** I developed a structured extraction process to move ML-generated labels into a **MySQL Relational Schema**. This involved data type optimization (e.g., converting floats to decimal for financial precision) and ensuring referential integrity across session IDs.
 
-### 3. Segment Validation
-Finally, I cross-referenced the Python-generated clusters with SQL-queried intent to ensure model reliability.
-![Segment Validation](images/segment_validation.png)
+![MySQL Schema and Describe](image_9bdbe7.png)
+**Schema Design:** The `sessions` table serves as the primary source of truth, integrating `customer_segment` and `predicted_session_value` directly into the relational environment for BI tool consumption.
+
+### Advanced SQL Metrics & Attribution
+![Revenue Ranking Query](Revenue%20rank%20by%20country%20and%20device%202.png)
+**Revenue Attribution:** Using **Window Functions** (`SUM OVER`), I calculated the `pct_contribution_to_revenue`. This allows the Analytics Head to see that specific country-device combinations (e.g., Country 3 on Device 0) are driving the lion's share of sales.
+
+![Traffic Source Analysis](Comparing%20behavior%20across%20traffic%20sources%202.png)
+**Funnel Leakage Analysis:** This query calculates the **Leakage Rate**—the percentage of users who add to cart but do not purchase. By ordering by `leakage_rate DESC`, I identified that certain traffic sources have a **-110% inefficiency**, indicating a critical drop-off in the checkout pipeline.
+
+---
+
+## 🔍 Executive Summary & Insights
+
+* **For the Analytics Head:** Engagement time is a "vanity metric" in this dataset. The **Intent Score** is a 12x better predictor of conversion, suggesting a shift in KPI focus from *Time on Site* to *Cart-to-View efficiency*.
+* **For the Stakeholders:** **Segment 2 (Window Shoppers)** represents a massive revenue recovery opportunity. Despite being 34% of our traffic, they produce $0 revenue. Implementing "Exit-Intent" discounts or "Saved Cart" reminders for this group could reclaim significant lost GMV.
+* **For HR/Product Managers:** This project demonstrates a full-cycle ability to handle raw data, apply machine learning for segmentation, and deploy SQL infrastructure for business reporting.
 
 ---
 
 ## 🛠️ Technical Stack
-* **Languages:** Python (Pandas, Scikit-Learn), SQL (MySQL)
-* **Models:** Random Forest, K-Means Clustering
-* **Techniques:** ETL Pipelines, Feature Engineering, Window Functions, CTEs
-* **Visuals:** Seaborn, Matplotlib, Power BI/Excel (for schema)
-
----
-
-## 💡 Final Business Recommendations
-1. **Target Segment 2:** Implement "Exit-Intent" triggers or specialized discount codes for users who exceed 7 minutes of browsing without an "Add to Cart" action.
-2. **Optimize Mobile UI:** Based on the `revenue_by_country_device` analysis, prioritize UX fixes for the device types showing the highest drop-off in the funnel.
-3. **Surgical Marketing:** Focus ad spend on the "VIP" segment characteristics to lower Customer Acquisition Cost (CAC).
+* **Product Analytics:** Python (Pandas, Scikit-Learn), Feature Engineering, Behavioral Segmentation.
+* **Data Infrastructure:** SQL (MySQL), ETL Pipeline Design, Relational Schema Architecture.
+* **Advanced SQL:** Window Functions, CTEs, Ranking, Funnel Analysis.
+* **Visualization:** Seaborn, Matplotlib, MySQL Workbench Reporting.
